@@ -7,7 +7,7 @@ import { UserRouter } from "./routes.js/user.js";
 const app = express();
 dotenv.config();
 app.use(cors({
-  origin: ['http://localhost:3000'],
+  origin: ['https://placify-rho.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'], 
   credentials: true 
 }))
