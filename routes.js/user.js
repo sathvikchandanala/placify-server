@@ -163,17 +163,18 @@ router.post('/sendLabEmails', async (req, res) => {
   }
 });
 
+
+
 router.post("/", async (req, res) => {
   const { email, password } = req.body;
   
   try {
     const user = await User.findOne({ email });
-
     if (!user) {
       return res.status(401).json({ success: false, message: "Invalid User" });
     }
 
-    const validPassword = await bcrypt.compare(password, user.password);
+    const validPassword = await bcryt.compare(password, user.password);
     if (!validPassword) {
       return res.status(401).json({ success: false, message: "Password Incorrect" });
     }
@@ -186,7 +187,7 @@ router.post("/", async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === "production", 
       sameSite: "None",
       maxAge: 3600000,
     });
@@ -197,10 +198,12 @@ router.post("/", async (req, res) => {
   }
 });
 
+
 router.post("/logout", (req, res) => {
-  res.clearCookie("token", { httpOnly: true, secure: true, sameSite: "None" });
+  res.clearCookie("token", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "None" });
   return res.json({ status: true, message: "Logged Out" });
 });
+
 
 router.get("/auth/check-session", (req, res) => {
   if (req.cookies.token) {
@@ -209,7 +212,6 @@ router.get("/auth/check-session", (req, res) => {
     res.json({ loggedIn: false });
   }
 });
-
 
 
 const verifyUser = async (req, res, next) => {
@@ -221,7 +223,7 @@ const verifyUser = async (req, res, next) => {
     jwt.verify(token, process.env.KEY);
     next();
   } catch (err) {
-    return res.json(err);
+    return res.json({ status: false, message: "Invalid Token" });
   }
 };
 
@@ -245,6 +247,7 @@ router.get("/validate", async (req, res) => {
     return res.json({ status: false, message: "Invalid Token" });
   }
 });
+
 
 router.get("/currentUser", verifyUser, async (req, res) => {
   try {
