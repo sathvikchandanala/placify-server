@@ -10,7 +10,7 @@ dotenv.config();
 
 app.use(
   cors({
-    origin: "https://placify.vercel.app",
+    origin: "https://placify-rho.vercel.app",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
