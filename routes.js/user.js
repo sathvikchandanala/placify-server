@@ -165,32 +165,51 @@ router.post('/sendLabEmails', async (req, res) => {
 
 router.post("/", async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email });
+  
+  try {
+    const user = await User.findOne({ email });
 
-  if (!user) {
-    return res.json("Invalid User");
+    if (!user) {
+      return res.status(401).json({ success: false, message: "Invalid User" });
+    }
+
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ success: false, message: "Password Incorrect" });
+    }
+
+    const token = jwt.sign(
+      { _id: user._id, username: user.username },
+      process.env.KEY,
+      { expiresIn: "1h" }
+    );
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+      maxAge: 3600000,
+    });
+
+    return res.json({ success: true, role: user.isAdmin === "1" ? "Admin" : "User" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server Error" });
   }
-
-  const validPassword = await bcryt.compare(password, user.password);
-  if (!validPassword) {
-    return res.json("Password Incorrect");
-  }
-
-  const token = jwt.sign(
-    { _id: user._id, username: user.username },
-    process.env.KEY,
-    { expiresIn: "1h" }
-  );
-
-  res.cookie("token", token, { httpOnly: true, maxAge: 3600000 });
-
-  return res.json(user.isAdmin === "1" ? "Admin" : "Success");
 });
 
 router.post("/logout", (req, res) => {
   res.clearCookie("token", { httpOnly: true, secure: true, sameSite: "None" });
   return res.json({ status: true, message: "Logged Out" });
 });
+
+router.get("/auth/check-session", (req, res) => {
+  if (req.cookies.token) {
+    res.json({ loggedIn: true });
+  } else {
+    res.json({ loggedIn: false });
+  }
+});
+
 
 
 const verifyUser = async (req, res, next) => {
