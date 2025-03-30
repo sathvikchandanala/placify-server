@@ -20,14 +20,6 @@ app.use(cookieParser());
 app.use(express.json());
 app.use("/auth", UserRouter);
 
-app.get("/auth/check-session", (req, res) => {
-  if (req.cookies.token) {
-    res.json({ loggedIn: true });
-  } else {
-    res.json({ loggedIn: false });
-  }
-});
-
 try {
   await mongoose.connect(process.env.MONGO_URL);
   console.log("DB Connection Successful");
